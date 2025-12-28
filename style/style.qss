@@ -1,0 +1,44 @@
+/* 全局基础黑色背景 */
+QWidget {
+    background-color: #000000;
+    color: #FFFFFF; /* 全局文字设为白色 */
+    font-family: "Segoe UI", "Microsoft YaHei";
+}
+
+/* 主窗口背景 */
+QMainWindow {
+    background-color: #000000;
+}
+
+/* 分割器条颜色 - 设为深灰色以示区分 */
+QSplitter::handle {
+    background-color: #222222;
+}
+
+/* 按钮样式：深灰背景，青色边框 */
+QPushButton {
+    background-color: #1A1A1A;
+    border: 1px solid #333333;
+    color: #00AFFF;
+    padding: 5px;
+}
+
+QPushButton:hover {
+    background-color: #252525;
+    border: 1px solid #00FFFF;
+}
+
+/* 组合框背景 */
+QGroupBox {
+    border: 1px solid #333333;
+    margin-top: 10px;
+    color: #00AFFF;
+    font-weight: bold;
+}
+
+/* 输入框与下拉列表 */
+QLineEdit, QComboBox, QDoubleSpinBox {
+    background-color: #111111;
+    border: 1px solid #444444;
+    color: white;
+}
