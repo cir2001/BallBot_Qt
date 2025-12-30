@@ -24,11 +24,33 @@ void WaveformPlot::setupUi(const QString &title, const QStringList &labels) {
     l->addWidget(m_lblTitle, 1);
 
     QWidget *leg = new QWidget(); QHBoxLayout *hl = new QHBoxLayout(leg); hl->setContentsMargins(5, 0, 5, 0);
+
+    // 使用等宽字体，确保 '1', '8', '-', '+' 宽度完全一致
+    QFont monoFont("Consolas", 12, QFont::Bold);
+    // 如果系统没有 Consolas，备选方案
+    if (!QFontInfo(monoFont).exactMatch()) {
+        monoFont.setFamily("Monospace");
+    }
+
     for(int i=0; i<3; ++i) {
-        QLabel *c = new QLabel(); c->setFixedSize(10, 3); c->setStyleSheet(QString("background:%1;").arg(m_lineColors[i].name()));
-        QLabel *v = new QLabel(labels[i] + ": 0.0");
-        v->setStyleSheet(QString("color: %1; font-size: 13px; font-weight: bold;").arg(m_lineColors[i].name()));
-        m_valLabels.append(v); hl->addWidget(c); hl->addWidget(v); hl->addSpacing(8);
+        QLabel *c = new QLabel();
+        c->setFixedSize(10, 3);
+        c->setStyleSheet(QString("background:%1;").arg(m_lineColors[i].name()));
+
+        // --- 核心修改：固定 QLabel 宽度并使用等宽字体 ---
+        QLabel *v = new QLabel();
+        v->setFixedWidth(110); // 根据标签文字长度（如 "Voltage: -00.0"）调整此数值
+        v->setFont(monoFont);
+        v->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        v->setStyleSheet(QString("color: %1;").arg(m_lineColors[i].name()));
+
+        // 初始化文本
+        v->setText(QString("%1:  0.0").arg(labels[i]));
+
+        m_valLabels.append(v);
+        hl->addWidget(c);
+        hl->addWidget(v);
+        hl->addSpacing(8);
     }
     hl->addStretch(); l->addWidget(leg, 1);
     m_plot = new QCustomPlot(); l->addWidget(m_plot, 8);
@@ -37,13 +59,12 @@ void WaveformPlot::setupUi(const QString &title, const QStringList &labels) {
 void WaveformPlot::setupStyle() {
     this->setStyleSheet("background-color: #000000;");
     m_plot->setBackground(Qt::black);
-    // 统一样式
     m_plot->xAxis->setTickLabelFont(QFont("Segoe UI", 9, QFont::Bold));
     m_plot->yAxis->setTickLabelFont(QFont("Segoe UI", 11, QFont::Bold));
     m_plot->xAxis->setNumberFormat("f"); m_plot->xAxis->setNumberPrecision(1);
     m_plot->xAxis->ticker()->setTickCount(3);
     m_plot->axisRect()->setAutoMargins(QCP::msNone);
-    m_plot->axisRect()->setMargins(QMargins(45, 5, 5, 22)); // 极致边距
+    m_plot->axisRect()->setMargins(QMargins(45, 5, 5, 22));
 
     QPen p(QColor(100, 100, 100)); m_plot->xAxis->setBasePen(p); m_plot->yAxis->setBasePen(p);
     m_plot->xAxis->setTickLabelColor(Qt::white); m_plot->yAxis->setTickLabelColor(Qt::white);
@@ -57,13 +78,17 @@ void WaveformPlot::addData(double ts, const QVector<double> &v) {
 
     for (int i = 0; i < 3; ++i) {
         m_plot->graph(i)->addData(relTs, v[i]);
-        // 【核心修改】：内存清理逻辑
         m_plot->graph(i)->data()->removeBefore(relTs - MAX_HISTORY_SEC);
 
+        // --- 核心修改：格式化字符串，保证占位一致 ---
+        // 使用 arg 的 fieldWidth 参数。例如 6 位：符号1位 + 数字2位 + 小数点1位 + 小数1位 = 5位，设为 6 更稳
+        // 使用 QLatin1Char(' ') 在正数前补空格，或者用 QLatin1Char('+') 强制显示正号
         QString name = m_valLabels[i]->text().split(":").at(0);
-        m_valLabels[i]->setText(QString("%1: %2").arg(name).arg(v[i], 0, 'f', 1));
+        QString valStr = QString("%1").arg(v[i], 6, 'f', 1, QLatin1Char(' '));
+
+        m_valLabels[i]->setText(QString("%1:%2").arg(name).arg(valStr));
     }
-    m_plot->xAxis->setRange(relTs, 3.0, Qt::AlignRight); // 保持 3 秒量程
+    m_plot->xAxis->setRange(relTs, 3.0, Qt::AlignRight);
     m_plot->replot(QCustomPlot::rpQueuedReplot);
 }
 
@@ -73,12 +98,11 @@ void WaveformPlot::clearData() {
         m_plot->graph(i)->data()->clear();
     }
     m_plot->replot();
-    qDebug() << "WaveformPlot cleared for playback";
 }
+
 void WaveformPlot::setYRange(double min, double max) {
     if (m_plot) {
         m_plot->yAxis->setRange(min, max);
-        m_plot->replot(); // 立即刷新界面
+        m_plot->replot();
     }
 }
-

@@ -134,10 +134,10 @@ void MainWindow::setupLayout() {
     midRightL->setContentsMargins(5, 5, 5, 5);
     m_accelPlot = new WaveformPlot("ACCELERATION (g)", {"AccX", "AccY", "AccZ"},
                                    {Qt::cyan, Qt::magenta, Qt::yellow}, {-2.0, 2.0});
-    m_motorGroupPlot = new WaveformPlot("MOTORS OUTPUT (PWM)", {"M1", "M2", "M3"},
-                                        {Qt::red, Qt::green, Qt::blue}, {-1000, 1000});
+    m_motorSpeedBar = new MotorSpeedBar();
+    m_motorSpeedBar->setFixedHeight(300); // 设置一个合适的高度
     midRightL->addWidget(m_accelPlot, 5);
-    midRightL->addWidget(m_motorGroupPlot, 5);
+    midRightL->addWidget(m_motorSpeedBar, 5);
 
     midHSplitter->addWidget(midLeftArea);
     midHSplitter->addWidget(midCenterArea);
@@ -195,7 +195,7 @@ void MainWindow::connectSignals() {
 
     // 2. 上行数据分发 (统一入口)
     connect(m_dataProcessor, &DataProcessor::dataParsed, this,
-            [=](uint32_t ts_raw, float r, float p, float y, int16_t m1){
+            [=](uint32_t ts_raw, float r, float p, float y, int16_t m1,int16_t m2,int16_t m3){
                 if (m_btnFreeze->isChecked()) return;
 
                 double timestamp = QDateTime::currentMSecsSinceEpoch() / 1000.0;
@@ -205,7 +205,17 @@ void MainWindow::connectSignals() {
 
                 // 发送完整数据给 MainPlot 和侧边辅助图
                 m_attitudePlot->addData(timestamp, {double(r), double(p), double(y)});
-                m_motorGroupPlot->addData(timestamp, {double(m1), 0.0, 0.0});
+                m_motorSpeedBar->setSpeeds(double(m1), double(m2),double(m3));
+
+                QVector<double> poseData = {double(p), double(r), double(y)};
+                QVector<double> motorData = {double(m1), double(m2), double(m3)};
+                QVector<double> emptyData = {0,0,0};
+
+                m_mainPlot->updateAllData(timestamp,
+                                          emptyData, 0.0,    // Accel 保持不变或传空
+                                          emptyData, 0.0,    // Gyro 保持不变或传空
+                                          poseData,  0.0,    // Pose (对应首页 ATTITUDE)
+                                          motorData, 0.0);   // Motor
             });
 
     // 3. 日志分发
@@ -214,10 +224,13 @@ void MainWindow::connectSignals() {
     });
 
     // 4. 冻结逻辑
-    connect(m_btnFreeze, &QPushButton::toggled, this, [=](bool frozen) {
+    connect(m_btnFreeze, &QPushButton::toggled, this, [=](bool frozen)
+    {
         m_mainPlot->setFrozen(frozen);
         QList<WaveformPlot*> allPlots = this->findChildren<WaveformPlot*>();
         for (WaveformPlot* p : allPlots) p->setFrozen(frozen);
+
+        m_motorSpeedBar->setFrozen(frozen);
 
         QString baseStyle = "font-size: 18px; font-weight: bold; border-radius: 4px; border: 1px solid #333; ";
         if (frozen) {
@@ -295,7 +308,8 @@ void MainWindow::startPlayback(const QString &filePath) {
     m_accelPlot->clearData();
     m_gyroPlot->clearData();
     m_attitudePlot->clearData();
-    m_motorGroupPlot->clearData();
+
+    m_motorSpeedBar->clear();
 
     m_statusBar->setPlaybackMode(true);
     m_logPanel->appendLog("开始回放: " + filePath, 0);
@@ -340,18 +354,20 @@ void MainWindow::startPlayback(const QString &filePath) {
             float ax = row[4].toFloat();
             float ay = row[5].toFloat();
             float az = row[6].toFloat();
-            int16_t m1 = static_cast<int16_t>(row[7].toInt());
+            int16_t m1_speed = static_cast<int16_t>(row[14].toInt());
+            int16_t m2_speed = static_cast<int16_t>(row[15].toInt());
+            int16_t m3_speed = static_cast<int16_t>(row[16].toInt());
 
             QVector<double> acc = {ax, ay, az};
             QVector<double> pose = {p, r, y};
-            QVector<double> motor = {double(m1), 0.0, 0.0};
+            QVector<double> motor_speed = {double(m1_speed), double(m2_speed), double(m3_speed)};
             QVector<double> empty = {0,0,0};
 
             // 分发到 UI
-            m_mainPlot->updateAllData(ts, acc, 0, empty, 0, pose, 0, motor, 0);
+            m_mainPlot->updateAllData(ts, acc, 0, empty, 0, pose, 0, motor_speed, 0);
             m_accelPlot->addData(ts, acc);
             m_attitudePlot->addData(ts, pose);
-            m_motorGroupPlot->addData(ts, motor);
+            m_motorSpeedBar->setSpeeds(motor_speed[0], motor_speed[1], motor_speed[2]);
 
         } catch (...) {
             qDebug() << "第" << m_playbackIndex << "行数据解析失败";

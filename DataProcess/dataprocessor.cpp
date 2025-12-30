@@ -167,6 +167,14 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
         float m2_angle = packet.motor_data[motorSlot][1].angle;
         float m3_angle = packet.motor_data[motorSlot][2].angle;
 
+        float m1_speed = packet.motor_data[motorSlot][0].speed;
+        float m2_speed = packet.motor_data[motorSlot][1].speed;
+        float m3_speed = packet.motor_data[motorSlot][2].speed;
+
+        uint16_t m1_status = packet.motor_data[motorSlot][0].status;
+        uint16_t m2_status = packet.motor_data[motorSlot][1].status;
+        uint16_t m3_status = packet.motor_data[motorSlot][2].status;
+
         // --- 3. 写入 CSV 记录 ---
         if (m_file.isOpen()) {
             m_stream << pkgId << "," << currentTs << ","
@@ -175,29 +183,15 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
                       << roll << "," << pitch << "," << yaw << ","
                       << m1_out << "," << m2_out << "," << m3_out << ","
                       << m1_angle << "," << m2_angle << "," << m3_angle << ","
+                      << m1_speed << "," << m2_speed << "," << m3_speed << ","
+                      << m1_status << "," << m2_status << "," << m3_status << ","
                       << dt_us << "\n";
         }
-
-        // // 取最后一组采样点 (第19组)
-        // const RawSample_t &raw = packet.raw_data[19];
-
-        // int16_t gx = qFromLittleEndian<int16_t>(raw.gyro[0]);
-        // int16_t gy = qFromLittleEndian<int16_t>(raw.gyro[1]);
-        // int16_t gz = qFromLittleEndian<int16_t>(raw.gyro[2]);
-
-        // // 假设你已经在结构体中恢复了 accel 成员
-        // int16_t ax = 0; // 如果结构体还没改，暂时设为0
-        // int16_t ay = 0;
-        // int16_t az = 0;
-
-        // 发射匹配 6 个参数的信号
-        // emit imuRawParsed(gx, gy, gz, ax, ay, az);
-
         // 关键修改：发射信号给 UI 线程。为了性能，可以每 20ms 发射一次最新点，或者发射整个数组
         if (i == 19) { // 每一帧只向 UI 发送一个最新的采样点，降低 UI 刷新压力
-            emit dataParsed(baseTs + i, 0.0f, packet.ctrl_info[1].euler[1], 0.0f, 0);
+            emit dataParsed(baseTs + i, packet.ctrl_info[1].euler[0], packet.ctrl_info[1].euler[1],packet.ctrl_info[1].euler[2],m2_out, m2_out, m3_out);
 
-            emit imuRawParsed(gx, gy, gz, 0, 0, 0);
+            emit imuRawParsed(gx, gy, gz, ax, ay, az);
         }
     }
 }

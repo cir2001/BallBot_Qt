@@ -23,8 +23,9 @@ struct ControlStatus_t {
 };
 
 struct MotorFeedback_t {
-    float    angle;
-    uint16_t status;
+    float angle;   // 4字节，绝对角度
+    float speed;   // 4字节，【新增】实时转速 (deg/s)
+    uint16_t status; // 2字节，状态位
 };
 
 struct HybridPacket_t {
@@ -61,7 +62,7 @@ public:
 
 signals:
     // 定义信号：将解析后的关键数据发往 UI 线程
-    void dataParsed(uint32_t timestamp, float roll, float pitch, float yaw, int16_t m1_out);
+    void dataParsed(uint32_t timestamp, float roll, float pitch, float yaw, int16_t m1_out,int16_t m2_out,int16_t m3_out);
     void statusUpdated(QString status);
 
     // 新增：专门用于 6 轴原始数据的信号，匹配你的 Lambda 参数

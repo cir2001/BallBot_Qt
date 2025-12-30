@@ -11,18 +11,18 @@ void MainPlot::setupUi() {
     mainLayout->setSpacing(0);
 
     m_topTabBar = new QTabBar();
+    m_topTabBar->addTab("ATTITUDE");
     m_topTabBar->addTab("IMU ACCEL");
     m_topTabBar->addTab("IMU GYRO");
-    m_topTabBar->addTab("ATTITUDE");
     m_topTabBar->addTab("MOTORS SPEED");
     m_topTabBar->setExpanding(true);
 
     m_controlStack = new QStackedWidget();
     m_plotStack = new QStackedWidget();
 
-    createPage(0, "Accel", {"Acc X", "Acc Y", "Acc Z", "Acc Target"});
-    createPage(1, "Gyro",  {"Gyro X", "Gyro Y", "Gyro Z", "Gyro Target"});
-    createPage(2, "Pose",  {"Pitch", "Roll", "Yaw", "Angle Target"});
+    createPage(0, "Pose",  {"Pitch", "Roll", "Yaw", "Angle Target"});
+    createPage(1, "Accel", {"Acc X", "Acc Y", "Acc Z", "Acc Target"});
+    createPage(2, "Gyro",  {"Gyro X", "Gyro Y", "Gyro Z", "Gyro Target"});
     createPage(3, "Motor", {"Motor 1", "Motor 2", "Motor 3", "Speed Target"});
 
     connect(m_topTabBar, &QTabBar::currentChanged, [this](int index){
@@ -129,9 +129,9 @@ void MainPlot::setupStyle() {
 
         // --- 根据 Tab 类型初始化 Y 轴范围 ---
         switch(i) {
-        case 0: plot->yAxis->setRange(-2.0, 2.0);    break; // 加速度 (g)
-        case 1: plot->yAxis->setRange(-500.0, 500.0); break; // 陀螺仪 (dps)
-        case 2: plot->yAxis->setRange(-45.0, 45.0);   break; // 姿态角 (deg)
+        case 0: plot->yAxis->setRange(-45.0, 45.0);   break; // 首页：姿态角 (deg)
+        case 1: plot->yAxis->setRange(-2.0, 2.0);    break; // 加速度 (g)
+        case 2: plot->yAxis->setRange(-500.0, 500.0); break; // 陀螺仪 (dps)
         case 3: plot->yAxis->setRange(-1000, 1000);   break; // 电机输出 (PWM)
         }
 
@@ -168,10 +168,10 @@ void MainPlot::updateAllData(double ts,
         }
     };
 
-    pushData(0, acc, accTar);
-    pushData(1, gyro, gyroTar);
-    pushData(2, angle, angleTar);
-    pushData(3, motor, motorTar);
+    pushData(0, angle, angleTar); // 首页显示姿态角
+    pushData(1, acc, accTar);     // 第二页显示加速度
+    pushData(2, gyro, gyroTar);    // 第三页显示陀螺仪
+    pushData(3, motor, motorTar);  // 第四页显示电机
 }
 
 void MainPlot::setFrozen(bool frozen) {

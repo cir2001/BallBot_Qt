@@ -19,6 +19,7 @@
 #include "modules/waveformplot.h"
 #include "modules/mainplot.h"
 #include "modules/joystickwidget.h"
+#include "modules/motorspeedbar.h"
 
 class MainWindow : public QMainWindow
 {
@@ -56,8 +57,10 @@ private:
     // 左侧波形
     WaveformPlot   *m_accelPlot;
     WaveformPlot   *m_gyroPlot;
-    WaveformPlot   *m_motorGroupPlot;
+    //WaveformPlot   *m_motorGroupPlot;
     WaveformPlot   *m_attitudePlot;
+
+    MotorSpeedBar    *m_motorSpeedBar;
 
     QTimer *m_heartbeatTimer; //
 

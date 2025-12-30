@@ -28,6 +28,7 @@ SOURCES += \
     modules/joystickwidget.cpp \
     modules/logpanel.cpp \
     modules/mainplot.cpp \
+    modules/motorspeedbar.cpp \
     modules/topstatusbar.cpp \
     modules/waveformplot.cpp \
     plot/qcustomplot.cpp \
@@ -40,6 +41,7 @@ HEADERS += \
     modules/joystickwidget.h \
     modules/logpanel.h \
     modules/mainplot.h \
+    modules/motorspeedbar.h \
     modules/topstatusbar.h \
     modules/waveformplot.h \
     plot/qcustomplot.h \
