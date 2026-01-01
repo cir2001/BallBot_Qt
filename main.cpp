@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<uint32_t>("uint32_t");//防止跨线程（可能是 UDP 接收线程到 UI 线程）传递 uint32_t 类型的数据，但 Qt 的元对象系统默认不认识这个类型，导致信号槽调用失败。
     qRegisterMetaType<int16_t>("int16_t");
     qRegisterMetaType<int32_t>("int32_t");
+    qRegisterMetaType<uint16_t>("uint16_t");
 
     //加载全局样式
     QFile file(":/style/style.qss"); // 如果没用资源文件，直接读相对路径

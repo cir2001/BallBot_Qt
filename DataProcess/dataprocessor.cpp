@@ -50,8 +50,11 @@ void DataProcessor::initFile()
     m_file.setFileName(fileName);
     if (m_file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         m_stream.setDevice(&m_file); // 关联设备
-        m_stream << "PkgID,Timestamp,AccX,AccY,AccZ,GyroX,GyroY,GyroZ,Roll,Pitch,Yaw,M1_Out"
-                    ",M2_Out,M3_Out,M1_Angle,M2_Angle,M3_Angle,CtrlDT_us\n";
+        m_stream << "PkgID,Timestamp,"
+                    "AccX,AccY,AccZ,GyroX,GyroY,GyroZ,Roll,Pitch,Yaw,"
+                    "M1_Out,M2_Out,M3_Out,M1_Angle,M2_Angle,M3_Angle,"
+                    "M1_Speed,M2_Speed,M3_Speed,M1_Status,M2_Status,M3_Status"
+                    "CtrlDT_us\n";
     }
 }
 
@@ -129,11 +132,11 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
     uint16_t pkgId = qFromLittleEndian<uint16_t>(packet.packet_id);
     uint32_t baseTs = qFromLittleEndian<uint32_t>(packet.base_timestamp);
     // 调试：如果还是没反应，取消下面这行的注释，看控制台是否有输出
-    qDebug() << "成功解析数据包，时间戳:" << baseTs;
+    //qDebug() << "成功解析数据包，时间戳:" << baseTs;
 
     // 丢包检测 (利用 PacketID)
     if (m_lastPkgId != 0 && pkgId != (uint16_t)(m_lastPkgId + 1)) {
-        qDebug() << "检测到丢包! 缺失ID数量:" << (pkgId - m_lastPkgId - 1);
+        //qDebug() << "检测到丢包! 缺失ID数量:" << (pkgId - m_lastPkgId - 1);
     }
     m_lastPkgId = pkgId;
 
@@ -171,6 +174,8 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
         float m2_speed = packet.motor_data[motorSlot][1].speed;
         float m3_speed = packet.motor_data[motorSlot][2].speed;
 
+        //qDebug() << "m3_speed:" << m3_speed;
+
         uint16_t m1_status = packet.motor_data[motorSlot][0].status;
         uint16_t m2_status = packet.motor_data[motorSlot][1].status;
         uint16_t m3_status = packet.motor_data[motorSlot][2].status;
@@ -189,9 +194,12 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
         }
         // 关键修改：发射信号给 UI 线程。为了性能，可以每 20ms 发射一次最新点，或者发射整个数组
         if (i == 19) { // 每一帧只向 UI 发送一个最新的采样点，降低 UI 刷新压力
-            emit dataParsed(baseTs + i, packet.ctrl_info[1].euler[0], packet.ctrl_info[1].euler[1],packet.ctrl_info[1].euler[2],m2_out, m2_out, m3_out);
-
-            emit imuRawParsed(gx, gy, gz, ax, ay, az);
+            emit dataParsed(baseTs + i, packet.ctrl_info[1].euler[0], packet.ctrl_info[1].euler[1],packet.ctrl_info[1].euler[2],
+                            gx, gy, gz,
+                            ax, ay, az,
+                            m1_out, m2_out, m3_out,
+                            m1_speed, m2_speed, m3_speed,
+                            m1_status, m2_status, m3_status);
         }
     }
 }

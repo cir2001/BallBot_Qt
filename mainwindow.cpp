@@ -135,7 +135,7 @@ void MainWindow::setupLayout() {
     m_accelPlot = new WaveformPlot("ACCELERATION (g)", {"AccX", "AccY", "AccZ"},
                                    {Qt::cyan, Qt::magenta, Qt::yellow}, {-2.0, 2.0});
     m_motorSpeedBar = new MotorSpeedBar();
-    m_motorSpeedBar->setFixedHeight(300); // 设置一个合适的高度
+    m_motorSpeedBar->setFixedHeight(320); // 设置一个合适的高度
     midRightL->addWidget(m_accelPlot, 5);
     midRightL->addWidget(m_motorSpeedBar, 5);
 
@@ -195,7 +195,14 @@ void MainWindow::connectSignals() {
 
     // 2. 上行数据分发 (统一入口)
     connect(m_dataProcessor, &DataProcessor::dataParsed, this,
-            [=](uint32_t ts_raw, float r, float p, float y, int16_t m1,int16_t m2,int16_t m3){
+            [=](uint32_t ts_raw, float r, float p, float y,
+                int16_t gx, int16_t gy, int16_t gz,
+                int16_t ax, int16_t ay, int16_t az,
+                int16_t m1,int16_t m2,int16_t m3,
+                float m1_spd,float m2_spd,float m3_spd,
+                uint16_t m1_sta, uint16_t m2_sta, uint16_t m3_sta)
+            {
+                ///qDebug() << "成功解析数据包，时间戳:";
                 if (m_btnFreeze->isChecked()) return;
 
                 double timestamp = QDateTime::currentMSecsSinceEpoch() / 1000.0;
@@ -205,15 +212,21 @@ void MainWindow::connectSignals() {
 
                 // 发送完整数据给 MainPlot 和侧边辅助图
                 m_attitudePlot->addData(timestamp, {double(r), double(p), double(y)});
-                m_motorSpeedBar->setSpeeds(double(m1), double(m2),double(m3));
+                m_motorSpeedBar->setSpeeds(double(m1_spd), double(m2_spd),double(m3_spd), m1_sta, m2_sta, m3_sta);
+
+                m_accelPlot->addData(timestamp, {ax/16384.0, ay/16384.0, az/16384.0});
+                m_gyroPlot->addData(timestamp, {gx/131.0, gy/131.0, gz/131.0});
 
                 QVector<double> poseData = {double(p), double(r), double(y)};
+                // QVector<double> gyroData = {double(gx/131.0), double(gy/131.0), double(gz/131.0)};
+                QVector<double> gyroData = {double(gx), double(gy), double(gz)};
+                QVector<double> acclData = {double(ax/16384.0), double(ay/16384.0), double(az/16384.0)};
                 QVector<double> motorData = {double(m1), double(m2), double(m3)};
                 QVector<double> emptyData = {0,0,0};
 
                 m_mainPlot->updateAllData(timestamp,
-                                          emptyData, 0.0,    // Accel 保持不变或传空
-                                          emptyData, 0.0,    // Gyro 保持不变或传空
+                                          acclData, 0.0,    // Accel 保持不变或传空
+                                          gyroData, 0.0,    // Gyro 保持不变或传空
                                           poseData,  0.0,    // Pose (对应首页 ATTITUDE)
                                           motorData, 0.0);   // Motor
             });
@@ -241,17 +254,6 @@ void MainWindow::connectSignals() {
             m_btnFreeze->setStyleSheet(baseStyle + "background-color: #1A1A1A; color: #00AFFF;");
         }
     });
-
-    connect(m_dataProcessor, &DataProcessor::imuRawParsed, this,
-            [=](int16_t gx, int16_t gy, int16_t gz, int16_t ax, int16_t ay, int16_t az){
-                if (m_btnFreeze->isChecked()) return;
-
-                double ts = QDateTime::currentMSecsSinceEpoch() / 1000.0;
-
-                // 分发到三曲线组件
-                m_accelPlot->addData(ts, {ax/16384.0, ay/16384.0, az/16384.0});
-                m_gyroPlot->addData(ts, {gx/131.0, gy/131.0, gz/131.0});
-            });
 
     connect(m_workerThread, &QThread::finished, m_dataProcessor, &QObject::deleteLater);//关闭界面后，解绑udp
 }

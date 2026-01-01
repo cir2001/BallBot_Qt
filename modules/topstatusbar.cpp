@@ -75,8 +75,9 @@ void TopStatusBar::setupStyle()
     this->setStyleSheet(
         "QWidget { background-color: #000000; color: #FFFFFF; font-family: 'Segoe UI'; font-size: 18px; font-weight: bold; }"
         "QLabel#lblMode { color: #00AFFF; font-size: 20px; }"
-        "QLabel#timerValue { color: #00AFFF; min-width: 90px; }" // 科技蓝计时器
-        "QPushButton { border: none; background: transparent; color: #DCDCDC; font-size: 26px; font-weight: normal; }"
+        // 移除这里的 box-shadow（如果之前添加过）
+        "QLabel#timerValue { color: #00AFFF; min-width: 90px; }"
+        "QPushButton { border: none; background: transparent; color: #DCDCDC; font-size: 26px; }"
         "QPushButton:hover { background-color: #333; }"
         "QPushButton#btnClose:hover { background-color: #E81123; }"
         "QProgressBar { border: 1px solid #444; background: #222; border-radius: 2px; }"

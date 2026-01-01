@@ -62,11 +62,19 @@ public:
 
 signals:
     // 定义信号：将解析后的关键数据发往 UI 线程
-    void dataParsed(uint32_t timestamp, float roll, float pitch, float yaw, int16_t m1_out,int16_t m2_out,int16_t m3_out);
-    void statusUpdated(QString status);
+    // void dataParsed(uint32_t timestamp, float roll, float pitch, float yaw,
+    //                 int16_t m1_out,int16_t m2_out,int16_t m3_out,
+    //                 float m1_speed,float m2_speed,float m3_speed,
+    //                 uint16_t m1_status, uint16_t m2_status, uint16_t m3_status);
 
-    // 新增：专门用于 6 轴原始数据的信号，匹配你的 Lambda 参数
-    void imuRawParsed(int16_t gx, int16_t gy, int16_t gz, int16_t ax, int16_t ay, int16_t az);
+    void dataParsed(uint32_t timestamp, float roll, float pitch, float yaw,
+                    int16_t gx, int16_t gy, int16_t gz,
+                    int16_t ax, int16_t ay, int16_t az,
+                    int16_t m1_out,int16_t m2_out,int16_t m3_out,
+                    float m1_speed,float m2_speed,float m3_speed,
+                    uint16_t m1_status, uint16_t m2_status, uint16_t m3_status);
+
+    void statusUpdated(QString status);
 
     void finished();
 

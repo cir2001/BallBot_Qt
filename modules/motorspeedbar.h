@@ -2,7 +2,9 @@
 #define MOTORSPEEDBAR_H
 
 #include <QWidget>
-#include <QVBoxLayout>
+#include <QLabel>
+#include <QGridLayout>
+#include <QVector>
 #include "plot/qcustomplot.h"
 
 class MotorSpeedBar : public QWidget {
@@ -10,23 +12,23 @@ class MotorSpeedBar : public QWidget {
 public:
     explicit MotorSpeedBar(QWidget *parent = nullptr);
 
-    // 更新三个电机的 PWM 或转速值
-    void setSpeeds(double m1, double m2, double m3);
+    // 更新接口：包含 3 个电机的转速和状态位
+    void setSpeeds(double m1, double m2, double m3, uint16_t s1 = 0, uint16_t s2 = 0, uint16_t s3 = 0);
     void setFrozen(bool frozen) { m_isFrozen = frozen; }
-
-    void clear() { setSpeeds(0, 0, 0); }
+    void clear();
 
 private:
     QCustomPlot *m_plot;
-    // 为三个电机分别创建柱状图对象，以便设置不同颜色
-    QCPBars *m_bar1;
-    QCPBars *m_bar2;
-    QCPBars *m_bar3;
+    QCPBars *m_bar1, *m_bar2, *m_bar3;
+
+    // 指示灯与标签
+    QLabel *m_statusLamps[3];
+    QLabel *m_nameLabels[3];
 
     bool m_isFrozen = false;
-    const double MAX_VALUE = 25000.0; // 对应 PWM 最大值
+    const double MAX_VALUE = 2400.0; // 对应转速/PWM 最大量程
 
-
+    void setupStyle();
 };
 
 #endif
