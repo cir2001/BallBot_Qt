@@ -132,7 +132,7 @@ void MainPlot::setupStyle() {
         case 0: plot->yAxis->setRange(-45.0, 45.0);   break; // 首页：姿态角 (deg)
         case 1: plot->yAxis->setRange(-2.0, 2.0);    break; // 加速度 (g)
         case 2: plot->yAxis->setRange(-500.0, 500.0); break; // 陀螺仪 (dps)
-        case 3: plot->yAxis->setRange(-1000, 1000);   break; // 电机输出 (PWM)
+        case 3: plot->yAxis->setRange(-25000, 25000);   break; // 电机输出 (PWM)
         }
 
         plot->replot();

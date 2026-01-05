@@ -14,6 +14,7 @@
 struct RawSample_t {
     int16_t accel[3];
     int16_t gyro[3];
+    int16_t mag[3];
 };
 
 struct ControlStatus_t {
@@ -70,6 +71,7 @@ signals:
     void dataParsed(uint32_t timestamp, float roll, float pitch, float yaw,
                     int16_t gx, int16_t gy, int16_t gz,
                     int16_t ax, int16_t ay, int16_t az,
+                    // int16_t mx, int16_t my, int16_t mz,
                     int16_t m1_out,int16_t m2_out,int16_t m3_out,
                     float m1_speed,float m2_speed,float m3_speed,
                     uint16_t m1_status, uint16_t m2_status, uint16_t m3_status);

@@ -51,7 +51,7 @@ void DataProcessor::initFile()
     if (m_file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         m_stream.setDevice(&m_file); // 关联设备
         m_stream << "PkgID,Timestamp,"
-                    "AccX,AccY,AccZ,GyroX,GyroY,GyroZ,Roll,Pitch,Yaw,"
+                    "AccX,AccY,AccZ,GyroX,GyroY,GyroZ,magX,magY,magZ,Roll,Pitch,Yaw,"
                     "M1_Out,M2_Out,M3_Out,M1_Angle,M2_Angle,M3_Angle,"
                     "M1_Speed,M2_Speed,M3_Speed,M1_Status,M2_Status,M3_Status"
                     "CtrlDT_us\n";
@@ -136,7 +136,8 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
 
     // 丢包检测 (利用 PacketID)
     if (m_lastPkgId != 0 && pkgId != (uint16_t)(m_lastPkgId + 1)) {
-        //qDebug() << "检测到丢包! 缺失ID数量:" << (pkgId - m_lastPkgId - 1);
+        qDebug() << "检测到丢包! 缺失ID数量:" << (pkgId - m_lastPkgId - 1);
+        qDebug() << "检测到丢包! 时间戳:" << baseTs;
     }
     m_lastPkgId = pkgId;
 
@@ -152,6 +153,13 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
         int16_t gx = qFromLittleEndian<int16_t>(raw.gyro[0]);
         int16_t gy = qFromLittleEndian<int16_t>(raw.gyro[1]);
         int16_t gz = qFromLittleEndian<int16_t>(raw.gyro[2]);
+        int16_t mx = qFromLittleEndian<int16_t>(raw.mag[0]);
+        int16_t my = qFromLittleEndian<int16_t>(raw.mag[1]);
+        int16_t mz = qFromLittleEndian<int16_t>(raw.mag[2]);
+
+        float mx_file = (float) mx / 1000.0f;
+        float my_file = (float) my / 1000.0f;
+        float mz_file = (float) mz / 1000.0f;
 
         // B. 控制信息 (10ms/次) -> 0-9ms 使用 ctrl_info[0], 10-19ms 使用 ctrl_info[1]
         int ctrlIdx = (i < 10) ? 0 : 1;
@@ -185,6 +193,8 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
             m_stream << pkgId << "," << currentTs << ","
                       << ax << "," << ay << "," << az << ","
                       << gx << "," << gy << "," << gz << ","
+                      //<< mx << "," << my << "," << mz << ","
+                      << mx_file << "," << my_file << "," << mz_file << ","
                       << roll << "," << pitch << "," << yaw << ","
                       << m1_out << "," << m2_out << "," << m3_out << ","
                       << m1_angle << "," << m2_angle << "," << m3_angle << ","
@@ -197,6 +207,7 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
             emit dataParsed(baseTs + i, packet.ctrl_info[1].euler[0], packet.ctrl_info[1].euler[1],packet.ctrl_info[1].euler[2],
                             gx, gy, gz,
                             ax, ay, az,
+                            // mx,my,mz,
                             m1_out, m2_out, m3_out,
                             m1_speed, m2_speed, m3_speed,
                             m1_status, m2_status, m3_status);
