@@ -215,14 +215,20 @@ void MainWindow::connectSignals() {
                 m_motorSpeedBar->setSpeeds(double(m1_spd), double(m2_spd),double(m3_spd), m1_sta, m2_sta, m3_sta);
 
                 m_accelPlot->addData(timestamp, {ax/16384.0, ay/16384.0, az/16384.0});
-                m_gyroPlot->addData(timestamp, {gx/ 16.4f * (3.1415926f / 180.0f),
-                                                gy/ 16.4f * (3.1415926f / 180.0f),
-                                                gz/ 16.4f * (3.1415926f / 180.0f)});
+                // m_gyroPlot->addData(timestamp, {gx/ 16.4f * (3.1415926f / 180.0f),
+                //                                 gy/ 16.4f * (3.1415926f / 180.0f),
+                //                                 gz/ 16.4f * (3.1415926f / 180.0f)});
+                m_gyroPlot->addData(timestamp, {gx/ 16.4f,
+                                                gy/ 16.4f,
+                                                gz/ 16.4f});
 
                 QVector<double> poseData = {double(p), double(r), double(y)};
-                QVector<double> gyroData = {double(gx/ 16.4f * (3.1415926f / 180.0f)),
-                                            double(gy/ 16.4f * (3.1415926f / 180.0f)),
-                                            double(gz/ 16.4f * (3.1415926f / 180.0f))};
+                // QVector<double> gyroData = {double(gx/ 16.4f * (3.1415926f / 180.0f)),
+                //                             double(gy/ 16.4f * (3.1415926f / 180.0f)),
+                //                             double(gz/ 16.4f * (3.1415926f / 180.0f))};
+                QVector<double> gyroData = {double(gx/ 16.4f),
+                                            double(gy/ 16.4f),
+                                            double(gz/ 16.4f)};
                 //QVector<double> gyroData = {double(gx), double(gy), double(gz)};
                 QVector<double> acclData = {double(ax/16384.0), double(ay/16384.0), double(az/16384.0)};
                 QVector<double> motorData = {double(m1), double(m2), double(m3)};

@@ -53,7 +53,7 @@ void DataProcessor::initFile()
         m_stream << "PkgID,Timestamp,"
                     "AccX,AccY,AccZ,GyroX,GyroY,GyroZ,magX,magY,magZ,Roll,Pitch,Yaw,"
                     "M1_Out,M2_Out,M3_Out,M1_Angle,M2_Angle,M3_Angle,"
-                    "M1_Speed,M2_Speed,M3_Speed,M1_Status,M2_Status,M3_Status"
+                    "M1_Speed,M2_Speed,M3_Speed,M1_Status,M2_Status,M3_Status,"
                     "CtrlDT_us\n";
     }
 }
@@ -157,6 +157,14 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
         int16_t my = qFromLittleEndian<int16_t>(raw.mag[1]);
         int16_t mz = qFromLittleEndian<int16_t>(raw.mag[2]);
 
+        float ax_file = (float) ax / 16384.0f;
+        float ay_file = (float) ay / 16384.0f;
+        float az_file = (float) az / 16384.0f;
+
+        float gx_file = (float) gx / 16.4f;
+        float gy_file = (float) gy / 16.4f;
+        float gz_file = (float) gz / 16.4f;
+
         float mx_file = (float) mx / 1000.0f;
         float my_file = (float) my / 1000.0f;
         float mz_file = (float) mz / 1000.0f;
@@ -170,6 +178,7 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
         int16_t m1_out = qFromLittleEndian<int16_t>(ctrl.motor_out[0]);
         int16_t m2_out = qFromLittleEndian<int16_t>(ctrl.motor_out[1]);
         int16_t m3_out = qFromLittleEndian<int16_t>(ctrl.motor_out[2]);
+
         uint16_t dt_us = qFromLittleEndian<uint16_t>(ctrl.ctrl_dt);
 
         // C. 电机反馈信息 (5ms/次) -> i/5 确定 slot (0,1,2,3)
@@ -191,8 +200,8 @@ void DataProcessor::handleHybridPacket(const HybridPacket_t &packet)
         // --- 3. 写入 CSV 记录 ---
         if (m_file.isOpen()) {
             m_stream << pkgId << "," << currentTs << ","
-                      << ax << "," << ay << "," << az << ","
-                      << gx << "," << gy << "," << gz << ","
+                      << ax_file << "," << ay_file << "," << az_file << ","
+                      << gx_file << "," << gy_file << "," << gz_file << ","
                       //<< mx << "," << my << "," << mz << ","
                       << mx_file << "," << my_file << "," << mz_file << ","
                       << roll << "," << pitch << "," << yaw << ","
